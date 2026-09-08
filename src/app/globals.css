@@ -1,19 +1,22 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fffaf3;
+  --background: #fffdf8;
   --foreground: #241f3d;
 
-  --color-primary-50: #eef4ff;
-  --color-primary-100: #dbe8ff;
-  --color-primary-200: #bad4ff;
-  --color-primary-300: #8cb6ff;
-  --color-primary-400: #598fff;
-  --color-primary-500: #3366ff;
-  --color-primary-600: #2148ea;
-  --color-primary-700: #1c39c0;
-  --color-primary-800: #1c3399;
-  --color-primary-900: #1c2f79;
+  /* Indigo/purple primary — same saturation/lightness profile as the blue it replaces, so the
+     white-on-primary-500 contrast (~5.7:1) and text-primary-600-on-white contrast stay well
+     clear of WCAG AA. */
+  --color-primary-50: #f1eefc;
+  --color-primary-100: #e3ddf9;
+  --color-primary-200: #c9bef3;
+  --color-primary-300: #a896ea;
+  --color-primary-400: #8a70e0;
+  --color-primary-500: #6d4fd1;
+  --color-primary-600: #5b3eb8;
+  --color-primary-700: #4a319a;
+  --color-primary-800: #3b2678;
+  --color-primary-900: #2c1c5c;
 
   --color-accent-50: #fff2ec;
   --color-accent-100: #ffe0d1;
@@ -245,4 +248,18 @@ body {
 
 .animate-marquee:hover {
   animation-play-state: paused;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
 }

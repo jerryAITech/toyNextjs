@@ -11,7 +11,9 @@ import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { useToast } from "@/context/ToastContext";
 import { DecorativeBlobs } from "@/components/site/DecorativeBlobs";
-import { AuthIllustration } from "@/components/site/AuthIllustration";
+import { AuthFormAccents } from "@/components/site/AuthFormAccents";
+import { Logo } from "@/components/site/Logo";
+import { LoginIllustration } from "@/components/site/AuthIllustrations";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -49,20 +51,27 @@ export default function LoginPage() {
 
   return (
     <div className="flex flex-col lg:min-h-[calc(100vh-5rem)] lg:flex-row">
-      <div className="relative hidden overflow-hidden bg-gradient-to-br from-primary-50 via-primary-100/70 to-accent-50 lg:flex lg:w-1/2 lg:flex-col lg:items-center lg:justify-center lg:px-12 lg:py-16">
-        <DecorativeBlobs variant="auth" />
-        <AuthIllustration className="relative w-full max-w-sm" />
-        <h2 className="relative mt-4 text-center font-display text-2xl font-bold text-ink-900">Where Playtime Begins!</h2>
-        <p className="relative mt-2 max-w-xs text-center text-sm text-ink-500">Log in to pick up right where the fun left off.</p>
+      <div className="relative hidden flex-col items-center justify-center gap-10 overflow-hidden bg-gradient-to-br from-primary-300 via-primary-200 to-accent-200 px-12 py-12 lg:flex lg:w-1/2">
+        <LoginIllustration className="w-full max-w-md" />
+        <div className="relative z-10 text-center">
+          <h2 className="font-display text-3xl font-bold text-ink-900">Where Playtime Begins!</h2>
+          <p className="mt-2 max-w-sm text-ink-600">Log in to pick up right where the fun left off.</p>
+        </div>
       </div>
 
       <div className="relative flex flex-1 flex-col items-center justify-center px-4 py-10 lg:px-12">
+        <AuthFormAccents />
         <div className="lg:hidden">
           <DecorativeBlobs variant="auth" />
         </div>
 
         <div className="relative w-full max-w-md">
-          <AuthIllustration className="mx-auto mb-2 w-28 lg:hidden" />
+          <div className="mb-5 flex aspect-[16/9] w-full items-center justify-center overflow-hidden rounded-3xl bg-gradient-to-br from-primary-300 via-primary-200 to-accent-200 shadow-soft lg:hidden">
+            <LoginIllustration className="h-full max-w-[240px]" />
+          </div>
+          <div className="mb-4 flex justify-center">
+            <Logo size={34} wordmarkClassName="text-xl text-primary-600" />
+          </div>
           <h1 className="mb-1 text-center font-display text-2xl font-bold text-ink-900">Welcome Back!</h1>
           <p className="mb-6 text-center text-sm text-ink-500">Log in to continue shopping for toys</p>
 

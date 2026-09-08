@@ -62,7 +62,7 @@ export default function CartPage() {
   if (!cart || cart.items.length === 0) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-10">
-        <EmptyState icon={ShoppingBag} title="No toys in your cart yet" description="Browse our collection and add your favorite toys." actionLabel="Start Shopping" actionHref="/products" />
+        <EmptyState icon={ShoppingBag} title="Your toy box is empty!" description="Browse our collection and add your favorite toys." actionLabel="Explore Toys" actionHref="/products" />
       </div>
     );
   }

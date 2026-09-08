@@ -5,6 +5,7 @@ import { getSettings } from "@/lib/services/settingsService";
 import { ProductGallery } from "@/components/site/ProductGallery";
 import { ProductActions } from "@/components/site/ProductActions";
 import { ProductReviews } from "@/components/site/ProductReviews";
+import { ProductInfoTabs } from "@/components/site/ProductInfoTabs";
 import { ProductCard } from "@/components/site/ProductCard";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { StarRating } from "@/components/ui/StarRating";
@@ -140,34 +141,42 @@ export default async function ProductPage({ params }: { params: Promise<Params> 
             <InfoTile icon={RotateCcw} label="7-day returns" />
             <InfoTile icon={Banknote} label={product.codAvailable && settings.codEnabled ? "COD available" : "Prepaid only"} />
           </div>
+        </div>
+      </div>
 
-          {product.highlights.length > 0 && (
-            <div className="mt-6">
-              <h2 className="mb-2 text-sm font-semibold text-ink-800">Highlights</h2>
-              <ul className="list-disc space-y-1 pl-5 text-sm text-ink-600">
+      <div className="mt-12">
+        <ProductInfoTabs
+          description={
+            (product.description || product.material || product.dimensions || product.manufacturer || product.safetyInformation) && (
+              <div className="space-y-4">
+                {product.description && <p className="whitespace-pre-line text-sm text-ink-600">{product.description}</p>}
+                {(product.material || product.dimensions || product.manufacturer) && (
+                  <div className="space-y-1 text-sm text-ink-600">
+                    {product.material && <DetailRow label="Material" value={product.material} />}
+                    {product.dimensions && <DetailRow label="Dimensions" value={product.dimensions} />}
+                    {product.manufacturer && <DetailRow label="Manufacturer" value={product.manufacturer} />}
+                  </div>
+                )}
+                {product.safetyInformation && (
+                  <div className="rounded-2xl bg-sun-100 p-4 text-sm text-ink-700">
+                    <h3 className="mb-1 font-semibold">Safety Information</h3>
+                    <p>{product.safetyInformation}</p>
+                  </div>
+                )}
+              </div>
+            )
+          }
+          features={
+            product.highlights.length > 0 && (
+              <ul className="list-disc space-y-1.5 pl-5 text-sm text-ink-600">
                 {product.highlights.map((h, i) => (
                   <li key={i}>{h}</li>
                 ))}
               </ul>
-            </div>
-          )}
-
-          {product.description && (
-            <div className="mt-6">
-              <h2 className="mb-2 text-sm font-semibold text-ink-800">Description</h2>
-              <p className="whitespace-pre-line text-sm text-ink-600">{product.description}</p>
-            </div>
-          )}
-
-          <div className="mt-6 space-y-1 text-sm text-ink-600">
-            {product.material && <DetailRow label="Material" value={product.material} />}
-            {product.dimensions && <DetailRow label="Dimensions" value={product.dimensions} />}
-            {product.manufacturer && <DetailRow label="Manufacturer" value={product.manufacturer} />}
-          </div>
-
-          {product.specifications.length > 0 && (
-            <div className="mt-6">
-              <h2 className="mb-2 text-sm font-semibold text-ink-800">Specifications</h2>
+            )
+          }
+          specifications={
+            product.specifications.length > 0 && (
               <div className="overflow-hidden rounded-2xl border border-ink-100">
                 {product.specifications.map((s, i) => (
                   <div key={i} className={`flex justify-between px-4 py-2 text-sm ${i % 2 === 0 ? "bg-ink-50" : "bg-white"}`}>
@@ -176,32 +185,19 @@ export default async function ProductPage({ params }: { params: Promise<Params> 
                   </div>
                 ))}
               </div>
-            </div>
-          )}
-
-          {product.whatsIncluded.length > 0 && (
-            <div className="mt-6">
-              <h2 className="mb-2 text-sm font-semibold text-ink-800">What&apos;s Included</h2>
-              <ul className="list-disc space-y-1 pl-5 text-sm text-ink-600">
+            )
+          }
+          whatsIncluded={
+            product.whatsIncluded.length > 0 && (
+              <ul className="list-disc space-y-1.5 pl-5 text-sm text-ink-600">
                 {product.whatsIncluded.map((w, i) => (
                   <li key={i}>{w}</li>
                 ))}
               </ul>
-            </div>
-          )}
-
-          {product.safetyInformation && (
-            <div className="mt-6 rounded-2xl bg-sun-100 p-4 text-sm text-ink-700">
-              <h2 className="mb-1 font-semibold">Safety Information</h2>
-              <p>{product.safetyInformation}</p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="mt-12">
-        <SectionHeading title="Ratings & Reviews" />
-        <ProductReviews slug={product.slug} />
+            )
+          }
+          reviews={<ProductReviews slug={product.slug} />}
+        />
       </div>
 
       {related.length > 0 && (

@@ -44,7 +44,9 @@ export function ProductListToolbar({
 
   return (
     <div className="mb-4 flex items-center justify-between gap-3 px-4 sm:px-0">
-      <p className="text-sm text-ink-500">{total} toys found</p>
+      <p className="text-sm font-medium text-ink-700">
+        <span className="font-display font-bold text-ink-900">{total}</span> {total === 1 ? "Toy" : "Toys"}
+      </p>
 
       <div className="flex items-center gap-2">
         {/* Desktop sort */}

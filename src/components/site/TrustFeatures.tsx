@@ -8,7 +8,25 @@ const FEATURES = [
   { icon: Lock, title: "Secure Payments", desc: "Razorpay & Cash on Delivery", tone: "bg-berry-100 text-berry-500", blob: "text-berry-100" },
 ];
 
-export function TrustFeatures() {
+export function TrustFeatures({ variant = "cards" }: { variant?: "cards" | "strip" }) {
+  if (variant === "strip") {
+    return (
+      <div className="grid grid-cols-2 gap-3 px-4 sm:grid-cols-4 sm:gap-6 sm:px-0">
+        {FEATURES.map((f) => (
+          <div key={f.title} className="flex flex-col items-center gap-1.5 text-center sm:flex-row sm:text-left">
+            <div className={cn("flex size-9 shrink-0 items-center justify-center rounded-full", f.tone)}>
+              <f.icon size={17} />
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-ink-800 sm:text-sm">{f.title}</p>
+              <p className="text-[10px] text-ink-400 sm:text-xs">{f.desc}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-2 gap-3 px-4 sm:grid-cols-4 sm:gap-4 sm:px-0">
       {FEATURES.map((f) => (

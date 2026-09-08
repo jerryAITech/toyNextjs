@@ -2,27 +2,53 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, LayoutGrid, Heart, Receipt, User, Compass } from "lucide-react";
+import { Home, Search, Heart, ShoppingCart, Compass } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { useWishlist } from "@/context/WishlistContext";
+import { useCart } from "@/context/CartContext";
 
 const NAV_ITEMS = [
-  { href: "/", label: "Home", icon: Home },
   { href: "/explore", label: "Explore", icon: Compass },
-  { href: "/products", label: "Categories", icon: LayoutGrid },
   { href: "/wishlist", label: "Wishlist", icon: Heart },
-  { href: "/orders", label: "Orders", icon: Receipt },
-  { href: "/account", label: "Account", icon: User },
+  { href: "/cart", label: "Cart", icon: ShoppingCart },
 ];
+
+function focusSiteSearch() {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  window.setTimeout(() => document.getElementById("site-search-input")?.focus(), 300);
+}
 
 export function MobileBottomNav() {
   const pathname = usePathname();
   const { productIds } = useWishlist();
+  const { cart } = useCart();
+  const homeActive = pathname === "/";
 
   return (
     <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 flex h-14 border-t border-ink-100 bg-white/95 backdrop-blur md:hidden">
+      <Link
+        href="/"
+        className={cn(
+          "relative flex flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-medium",
+          homeActive ? "text-primary-600" : "text-ink-400"
+        )}
+      >
+        <Home size={20} strokeWidth={homeActive ? 2.5 : 2} />
+        Home
+      </Link>
+
+      <button
+        type="button"
+        onClick={focusSiteSearch}
+        aria-label="Search"
+        className="relative flex flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-medium text-ink-400"
+      >
+        <Search size={20} />
+        Search
+      </button>
+
       {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
-        const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
+        const active = pathname.startsWith(href);
         return (
           <Link
             key={href}
@@ -37,6 +63,11 @@ export function MobileBottomNav() {
             {label === "Wishlist" && productIds.size > 0 && (
               <span className="absolute right-[calc(50%-16px)] top-1 flex size-4 items-center justify-center rounded-full bg-accent-500 text-[9px] font-bold text-white">
                 {productIds.size}
+              </span>
+            )}
+            {label === "Cart" && (cart?.itemCount ?? 0) > 0 && (
+              <span className="absolute right-[calc(50%-16px)] top-1 flex size-4 items-center justify-center rounded-full bg-primary-500 text-[9px] font-bold text-white">
+                {cart?.itemCount}
               </span>
             )}
           </Link>

@@ -68,7 +68,7 @@ export function InfiniteProductGrid({
 
   return (
     <div>
-      <div className={cn("grid grid-cols-2 gap-3 px-4 sm:grid-cols-3 sm:px-0 xl:grid-cols-4", className)}>
+      <div className={cn("grid grid-cols-2 gap-3 px-4 sm:px-0 md:grid-cols-3 xl:grid-cols-4", className)}>
         {items.map((p) => (
           <ProductCard key={p._id} product={p} />
         ))}

@@ -1,21 +1,40 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Search, X } from "lucide-react";
+import { Search, X, LayoutGrid } from "lucide-react";
 import { formatINR } from "@/lib/utils/pricing";
 import { cn } from "@/lib/utils/cn";
+import type { NavCategory } from "./Header";
 
 type Suggestion = { _id: string; name: string; slug: string; images: string[]; price: number; mrp: number; stock: number };
 
-export function SearchBar({ className, autoFocus, onNavigate }: { className?: string; autoFocus?: boolean; onNavigate?: () => void }) {
+export function SearchBar({
+  className,
+  autoFocus,
+  onNavigate,
+  categories = [],
+  inputId,
+}: {
+  className?: string;
+  autoFocus?: boolean;
+  onNavigate?: () => void;
+  categories?: NavCategory[];
+  inputId?: string;
+}) {
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const categoryMatches = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (q.length < 2) return [];
+    return categories.filter((c) => c.name.toLowerCase().includes(q)).slice(0, 3);
+  }, [query, categories]);
 
   useEffect(() => {
     if (query.trim().length < 2) {
@@ -50,6 +69,7 @@ export function SearchBar({ className, autoFocus, onNavigate }: { className?: st
       <div className="flex items-center gap-2 rounded-full border border-ink-200 bg-white px-4 py-2 shadow-soft focus-within:ring-2 focus-within:ring-primary-400">
         <Search size={18} className="shrink-0 text-ink-400" />
         <input
+          id={inputId}
           autoFocus={autoFocus}
           value={query}
           onChange={(e) => {
@@ -68,8 +88,30 @@ export function SearchBar({ className, autoFocus, onNavigate }: { className?: st
         )}
       </div>
 
-      {open && suggestions.length > 0 && (
+      {open && (suggestions.length > 0 || categoryMatches.length > 0) && (
         <div className="absolute z-30 mt-2 w-full overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-lifted">
+          {categoryMatches.length > 0 && (
+            <div className="border-b border-ink-100 py-1.5">
+              {categoryMatches.map((c) => (
+                <Link
+                  key={c.slug}
+                  href={`/category/${c.slug}`}
+                  onClick={() => {
+                    setOpen(false);
+                    onNavigate?.();
+                  }}
+                  className="flex items-center gap-3 px-4 py-2 hover:bg-ink-50"
+                >
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-500">
+                    <LayoutGrid size={15} />
+                  </span>
+                  <span className="text-sm text-ink-700">
+                    {c.name} <span className="text-ink-400">in Categories</span>
+                  </span>
+                </Link>
+              ))}
+            </div>
+          )}
           {suggestions.map((s) => (
             <Link
               key={s._id}

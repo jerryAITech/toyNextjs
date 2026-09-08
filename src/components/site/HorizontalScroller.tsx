@@ -82,13 +82,12 @@ export function HorizontalScroller({
 }
 
 export function ProductScrollerItem({ children }: { children: React.ReactNode }) {
-  // 4 cards per row at sm:+ — width math matches HorizontalScroller's own gap-3 (12px): (100% -
-  // 3 gaps) / 4 columns.
-  return <div className="w-[42vw] shrink-0 snap-start sm:w-[calc(25%-9px)]">{children}</div>;
+  // 5 cards per row at sm:+ (one full row on web) — width math matches HorizontalScroller's own
+  // gap-3 (12px): (100% - 4 gaps) / 5 columns.
+  return <div className="w-[42vw] shrink-0 snap-start sm:w-[calc(20%-9.6px)]">{children}</div>;
 }
 
 export function CategoryScrollerItem({ children }: { children: React.ReactNode }) {
-  // 5 cards per row at sm:+, same gap-3 math: (100% - 4 gaps) / 5 columns. Mobile is left
-  // unconstrained — CategoryCard's own compact intrinsic size already peek-scrolls nicely there.
-  return <div className="shrink-0 snap-start sm:w-[calc(20%-9.6px)]">{children}</div>;
+  // 5 cards per row at sm:+, same gap-3 math: (100% - 4 gaps) / 5 columns.
+  return <div className="w-[38vw] shrink-0 snap-start sm:w-[calc(20%-9.6px)]">{children}</div>;
 }
