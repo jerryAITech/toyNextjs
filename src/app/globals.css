@@ -1,0 +1,248 @@
+@import "tailwindcss";
+
+:root {
+  --background: #fffaf3;
+  --foreground: #241f3d;
+
+  --color-primary-50: #eef4ff;
+  --color-primary-100: #dbe8ff;
+  --color-primary-200: #bad4ff;
+  --color-primary-300: #8cb6ff;
+  --color-primary-400: #598fff;
+  --color-primary-500: #3366ff;
+  --color-primary-600: #2148ea;
+  --color-primary-700: #1c39c0;
+  --color-primary-800: #1c3399;
+  --color-primary-900: #1c2f79;
+
+  --color-accent-50: #fff2ec;
+  --color-accent-100: #ffe0d1;
+  --color-accent-200: #ffc0a3;
+  --color-accent-300: #ff9a6e;
+  --color-accent-400: #ff7a45;
+  --color-accent-500: #fa5a1f;
+  --color-accent-600: #db4113;
+  --color-accent-700: #b23310;
+  --color-accent-800: #8c2a12;
+  --color-accent-900: #712512;
+
+  --color-sun-100: #fff6d6;
+  --color-sun-300: #ffe57a;
+  --color-sun-400: #ffd23f;
+  --color-sun-500: #ffb703;
+
+  --color-mint-100: #dcfbe9;
+  --color-mint-400: #34d399;
+  --color-mint-500: #16a67a;
+  --color-mint-600: #0f8a65;
+  /* mint-600 on mint-100 sits at 3.92:1, short of WCAG AA — mint-700 clears it at ~5.9:1. */
+  --color-mint-700: #0c6b4e;
+
+  --color-berry-100: #ffe3ec;
+  --color-berry-400: #ff6b9a;
+  --color-berry-500: #ef4577;
+
+  --color-ink-50: #f7f6fb;
+  --color-ink-100: #ece9f7;
+  --color-ink-200: #d6d1ec;
+  --color-ink-300: #b3a9d9;
+  /* Darkened from #8b7db8 — the original sat at ~3.66:1 contrast against white/cream, short of
+     WCAG AA's 4.5:1 for normal text (this token is used for nearly all secondary/muted text
+     sitewide). #6f6291 keeps the same lavender hue with contrast to spare (~4.95:1) even against
+     the bottom nav's slightly-off-white backdrop-blur surface and its small 11px label text. */
+  --color-ink-400: #6f6291;
+  --color-ink-500: #6c5c9c;
+  --color-ink-600: #4f4278;
+  --color-ink-700: #3a305a;
+  --color-ink-800: #2b2344;
+  --color-ink-900: #1a1530;
+
+  --color-success: #16a67a;
+  --color-warning: #ffb703;
+  --color-danger: #ef4444;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-primary-50: var(--color-primary-50);
+  --color-primary-100: var(--color-primary-100);
+  --color-primary-200: var(--color-primary-200);
+  --color-primary-300: var(--color-primary-300);
+  --color-primary-400: var(--color-primary-400);
+  --color-primary-500: var(--color-primary-500);
+  --color-primary-600: var(--color-primary-600);
+  --color-primary-700: var(--color-primary-700);
+  --color-primary-800: var(--color-primary-800);
+  --color-primary-900: var(--color-primary-900);
+
+  --color-accent-50: var(--color-accent-50);
+  --color-accent-100: var(--color-accent-100);
+  --color-accent-200: var(--color-accent-200);
+  --color-accent-300: var(--color-accent-300);
+  --color-accent-400: var(--color-accent-400);
+  --color-accent-500: var(--color-accent-500);
+  --color-accent-600: var(--color-accent-600);
+  --color-accent-700: var(--color-accent-700);
+  --color-accent-800: var(--color-accent-800);
+  --color-accent-900: var(--color-accent-900);
+
+  --color-sun-100: var(--color-sun-100);
+  --color-sun-300: var(--color-sun-300);
+  --color-sun-400: var(--color-sun-400);
+  --color-sun-500: var(--color-sun-500);
+
+  --color-mint-100: var(--color-mint-100);
+  --color-mint-400: var(--color-mint-400);
+  --color-mint-500: var(--color-mint-500);
+  --color-mint-600: var(--color-mint-600);
+  --color-mint-700: var(--color-mint-700);
+
+  --color-berry-100: var(--color-berry-100);
+  --color-berry-400: var(--color-berry-400);
+  --color-berry-500: var(--color-berry-500);
+
+  --color-ink-50: var(--color-ink-50);
+  --color-ink-100: var(--color-ink-100);
+  --color-ink-200: var(--color-ink-200);
+  --color-ink-300: var(--color-ink-300);
+  --color-ink-400: var(--color-ink-400);
+  --color-ink-500: var(--color-ink-500);
+  --color-ink-600: var(--color-ink-600);
+  --color-ink-700: var(--color-ink-700);
+  --color-ink-800: var(--color-ink-800);
+  --color-ink-900: var(--color-ink-900);
+
+  --color-success: var(--color-success);
+  --color-warning: var(--color-warning);
+  --color-danger: var(--color-danger);
+
+  --font-sans: var(--font-poppins);
+  --font-display: var(--font-baloo);
+
+  --shadow-soft: 0 2px 10px 0 rgb(36 31 61 / 0.06), 0 1px 2px 0 rgb(36 31 61 / 0.04);
+  --shadow-card: 0 8px 24px -4px rgb(36 31 61 / 0.1), 0 2px 6px -2px rgb(36 31 61 / 0.06);
+  --shadow-lifted: 0 16px 40px -8px rgb(36 31 61 / 0.18);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display), var(--font-sans), sans-serif;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .snap-x-mandatory {
+    scroll-snap-type: x mandatory;
+  }
+  .snap-y-mandatory {
+    scroll-snap-type: y mandatory;
+  }
+  .snap-start {
+    scroll-snap-align: start;
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes heart-pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.35);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-toast-in {
+  animation: toast-in 0.2s ease-out;
+}
+
+.animate-sheet-up {
+  animation: sheet-up 0.25s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.animate-heart-pop {
+  animation: heart-pop 0.35s ease-out;
+}
+
+@keyframes shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out both;
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 22s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
