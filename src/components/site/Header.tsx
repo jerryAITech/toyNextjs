@@ -59,6 +59,9 @@ export function Header({ categories }: { categories: NavCategory[] }) {
         </div>
 
         <nav className="flex shrink-0 items-center gap-5 text-sm font-medium text-ink-600">
+          <Link href="/products" className="hover:text-primary-600">
+            All Products
+          </Link>
           <Link href="/products?trending=1" className="hover:text-primary-600">
             Trending
           </Link>
@@ -153,6 +156,9 @@ export function Header({ categories }: { categories: NavCategory[] }) {
 
       <Drawer open={menuOpen} onClose={() => setMenuOpen(false)} title="Shop by Category" side="left">
         <div className="flex flex-col gap-1">
+          <Link href="/products" onClick={() => setMenuOpen(false)} className="rounded-xl px-3 py-2.5 text-sm font-semibold text-primary-600 hover:bg-primary-50">
+            All Products
+          </Link>
           {categories.map((c) => (
             <Link key={c.slug} href={`/category/${c.slug}`} onClick={() => setMenuOpen(false)} className="rounded-xl px-3 py-2.5 text-sm font-medium text-ink-700 hover:bg-primary-50 hover:text-primary-600">
               {c.name}
