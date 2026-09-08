@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Search, Heart, ShoppingCart, Compass } from "lucide-react";
+import { Home, Search, Heart, ShoppingCart, Compass, Video } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { useWishlist } from "@/context/WishlistContext";
 import { useCart } from "@/context/CartContext";
@@ -60,6 +60,14 @@ export function MobileBottomNav() {
           >
             <Icon size={20} strokeWidth={active ? 2.5 : 2} />
             {label}
+            {label === "Explore" && (
+              <span
+                aria-hidden="true"
+                className="absolute right-[calc(50%-15px)] top-0.5 flex size-3.5 items-center justify-center rounded-full bg-accent-500 text-white"
+              >
+                <Video size={8} strokeWidth={2.5} />
+              </span>
+            )}
             {label === "Wishlist" && productIds.size > 0 && (
               <span className="absolute right-[calc(50%-16px)] top-1 flex size-4 items-center justify-center rounded-full bg-accent-500 text-[9px] font-bold text-white">
                 {productIds.size}

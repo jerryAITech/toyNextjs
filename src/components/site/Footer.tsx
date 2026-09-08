@@ -13,6 +13,7 @@ const SECTIONS: { title: string; links: { label: string; href: string }[] }[] = 
     links: [
       { label: "About Us", href: "/about" },
       { label: "Contact Us", href: "/contact" },
+      { label: "Play 🏎️", href: "/play" },
     ],
   },
   {

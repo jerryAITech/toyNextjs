@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Heart, ShoppingCart, User, Menu, LogOut, Package, MapPin, ChevronDown } from "lucide-react";
+import { Heart, ShoppingCart, User, Menu, LogOut, Package, MapPin, ChevronDown, Video } from "lucide-react";
 import { SearchBar } from "./SearchBar";
 import { Logo } from "./Logo";
 import { AnnouncementBar } from "./AnnouncementBar";
@@ -94,6 +94,10 @@ export function Header({ categories, freeShippingThreshold }: { categories: NavC
 
           <Link href="/products?trending=1" className="hover:text-primary-600">
             Trending
+          </Link>
+          <Link href="/explore" className="flex items-center gap-1 hover:text-primary-600">
+            Explore
+            <Video size={14} className="text-accent-500" aria-hidden="true" />
           </Link>
           <Link href="/products?sort=discount" className="hover:text-primary-600">
             Deals

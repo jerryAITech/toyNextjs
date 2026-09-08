@@ -97,15 +97,32 @@ function SteeringWheelIcon({ className }: { className?: string }) {
   );
 }
 
-// A purely decorative floating car — no product data, just a bit of playful personality for the
-// storefront. Left alone, it bounces off the edges of the viewport (below the header, above the
-// mobile nav), reversing vx/vy independently on each wall hit and rotating to face whichever way
-// it's heading. Click it to pause/resume, drag it to pick it up and fling it in a new direction,
-// or use the steering wheel to redirect it while it keeps driving. Position/rotation updates
-// after mount mutate the DOM node directly (not via React state) so none of this re-renders the
-// component 60 times a second.
-export function BouncingCar() {
+// A purely decorative floating car — no product data, just a bit of playful personality. Left
+// alone, it bounces off the edges of its arena, reversing vx/vy independently on each wall hit
+// and rotating to face whichever way it's heading. Click it to pause/resume, drag it to pick it
+// up and fling it in a new direction, or use the steering wheel to redirect it while it keeps
+// driving. Position/rotation updates after mount mutate the DOM node directly (not via React
+// state) so none of this re-renders the component 60 times a second.
+//
+// `mode="floating"` (default) overlays the whole viewport, below the header and above the mobile
+// nav — used for the old site-wide easter egg. `mode="embedded"` instead fills the nearest
+// `position: relative` ancestor the caller provides (e.g. a track arena on the /play page), with
+// the steering wheel pinned to that same box's corner instead of the viewport's.
+//
+// `trail` (embedded use only) paints a rainbow line on a canvas behind the car everywhere it's
+// been — the hue drifts continuously with elapsed time, not distance, so it reads as "when" as
+// well as "where" the car drove.
+export function BouncingCar({ mode = "floating", trail = false }: { mode?: "floating" | "embedded"; trail?: boolean }) {
   const arenaRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  // Read from the tick-loop effect below (which intentionally only depends on
+  // prefersReducedMotion, same as the other closures it calls) instead of closing over the
+  // `trail` prop directly, so it doesn't need to be in that effect's dependency array. Synced via
+  // its own effect, not written inline during render — refs can only be mutated after render.
+  const trailRef = useRef(trail);
+  useEffect(() => {
+    trailRef.current = trail;
+  }, [trail]);
   const carRef = useRef<HTMLButtonElement>(null);
   const wheelRef = useRef<HTMLButtonElement>(null);
   const posRef = useRef({ x: INITIAL_X, y: INITIAL_Y });
@@ -126,6 +143,7 @@ export function BouncingCar() {
   );
 
   useEffect(() => {
+    if (mode === "embedded") return;
     const header = document.querySelector("header");
     function syncTopInset() {
       const h = header?.getBoundingClientRect().height ?? 96;
@@ -134,7 +152,35 @@ export function BouncingCar() {
     syncTopInset();
     window.addEventListener("resize", syncTopInset);
     return () => window.removeEventListener("resize", syncTopInset);
-  }, []);
+  }, [mode]);
+
+  useEffect(() => {
+    if (!trail) return;
+    function syncCanvasSize() {
+      const canvas = canvasRef.current;
+      const arena = arenaRef.current;
+      if (!canvas || !arena) return;
+      canvas.width = arena.clientWidth;
+      canvas.height = arena.clientHeight;
+    }
+    syncCanvasSize();
+    window.addEventListener("resize", syncCanvasSize);
+    return () => window.removeEventListener("resize", syncCanvasSize);
+  }, [trail]);
+
+  function drawTrailSegment(x0: number, y0: number, x1: number, y1: number, ts: number) {
+    if (!trailRef.current) return;
+    const ctx = canvasRef.current?.getContext("2d");
+    if (!ctx) return;
+    const hue = (ts / 15) % 360;
+    ctx.strokeStyle = `hsl(${hue}, 85%, 60%)`;
+    ctx.lineWidth = 5;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(x0 + CAR_WIDTH / 2, y0 + CAR_HEIGHT / 2);
+    ctx.lineTo(x1 + CAR_WIDTH / 2, y1 + CAR_HEIGHT / 2);
+    ctx.stroke();
+  }
 
   function applyCarTransform(headingDeg?: number) {
     if (!carRef.current) return;
@@ -173,6 +219,8 @@ export function BouncingCar() {
       if (!pausedRef.current && !draggingRef.current && arenaRef.current && carRef.current) {
         const maxX = arenaRef.current.clientWidth - CAR_WIDTH;
         const maxY = arenaRef.current.clientHeight - CAR_HEIGHT;
+        const prevX = posRef.current.x;
+        const prevY = posRef.current.y;
         let { x, y } = posRef.current;
         let { vx, vy } = velRef.current;
 
@@ -187,6 +235,7 @@ export function BouncingCar() {
         posRef.current = { x, y };
         velRef.current = { vx, vy };
         applyCarTransform();
+        drawTrailSegment(prevX, prevY, x, y, ts);
       }
 
       frameRef.current = requestAnimationFrame(tick);
@@ -256,6 +305,7 @@ export function BouncingCar() {
         ? Math.atan2(ny - lastY, nx - lastX) * (180 / Math.PI)
         : undefined;
 
+      drawTrailSegment(lastX, lastY, nx, ny, now);
       lastX = nx;
       lastY = ny;
       lastT = now;
@@ -329,9 +379,14 @@ export function BouncingCar() {
     <>
       <div
         ref={arenaRef}
-        className="pointer-events-none fixed inset-x-3 bottom-20 z-20 sm:inset-x-6 md:bottom-6"
-        style={{ top: topInset }}
+        className={cn(
+          "pointer-events-none z-20",
+          mode === "embedded" ? "absolute inset-0" : "fixed inset-x-3 bottom-20 sm:inset-x-6 md:bottom-6"
+        )}
+        style={mode === "embedded" ? undefined : { top: topInset }}
       >
+        {trail && <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" aria-hidden="true" />}
+
         <button
           ref={carRef}
           onClick={handleCarClick}
@@ -360,9 +415,12 @@ export function BouncingCar() {
         ref={wheelRef}
         onPointerDown={handleWheelPointerDown}
         onKeyDown={handleWheelKeyDown}
-        aria-label="Steer the floating car"
+        aria-label="Steer the car"
         style={{ transform: `rotate(${INITIAL_ANGLE * (180 / Math.PI)}deg)`, touchAction: "none" }}
-        className="fixed bottom-24 right-4 z-30 flex size-14 cursor-pointer items-center justify-center rounded-full border border-primary-200 bg-white/95 shadow-lifted backdrop-blur transition-transform hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500 md:bottom-8 md:right-8"
+        className={cn(
+          "z-30 flex size-14 cursor-pointer items-center justify-center rounded-full border border-primary-200 bg-white/95 shadow-lifted backdrop-blur transition-transform hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500",
+          mode === "embedded" ? "absolute bottom-4 right-4" : "fixed bottom-24 right-4 md:bottom-8 md:right-8"
+        )}
       >
         <SteeringWheelIcon className="size-9" />
       </button>

@@ -3,7 +3,6 @@ import { getSettings } from "@/lib/services/settingsService";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { MobileBottomNav } from "@/components/site/MobileBottomNav";
-import { BouncingCar } from "@/components/site/BouncingCar";
 
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
   const [categories, settings] = await Promise.all([
@@ -18,7 +17,6 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       <main className="flex-1 pb-16 md:pb-0">{children}</main>
       <Footer />
       <MobileBottomNav />
-      <BouncingCar />
     </div>
   );
 }
