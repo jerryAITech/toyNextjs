@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Heart, ShoppingCart, User, Menu, LogOut, Package, MapPin, ChevronDown, Video } from "lucide-react";
+import { Heart, ShoppingCart, User, Menu, LogOut, Package, MapPin, ChevronDown, Video, Gamepad2 } from "lucide-react";
 import { SearchBar } from "./SearchBar";
 import { Logo } from "./Logo";
 import { AnnouncementBar } from "./AnnouncementBar";
@@ -98,6 +98,10 @@ export function Header({ categories, freeShippingThreshold }: { categories: NavC
           <Link href="/explore" className="flex items-center gap-1 hover:text-primary-600">
             Explore
             <Video size={14} className="text-accent-500" aria-hidden="true" />
+          </Link>
+          <Link href="/games" className="flex items-center gap-1 hover:text-primary-600">
+            Games
+            <Gamepad2 size={14} className="text-primary-500" aria-hidden="true" />
           </Link>
           <Link href="/products?sort=discount" className="hover:text-primary-600">
             Deals
@@ -198,6 +202,9 @@ export function Header({ categories, freeShippingThreshold }: { categories: NavC
         <div className="flex flex-col gap-1">
           <Link href="/products" onClick={() => setMenuOpen(false)} className="rounded-xl px-3 py-2.5 text-sm font-semibold text-primary-600 hover:bg-primary-50">
             All Products
+          </Link>
+          <Link href="/games" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-accent-600 hover:bg-accent-50">
+            <Gamepad2 size={16} /> Arcade Games 🎮
           </Link>
           {categories.map((c) => (
             <Link key={c.slug} href={`/category/${c.slug}`} onClick={() => setMenuOpen(false)} className="rounded-xl px-3 py-2.5 text-sm font-medium text-ink-700 hover:bg-primary-50 hover:text-primary-600">

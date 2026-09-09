@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Search, Heart, ShoppingCart, Compass, Video } from "lucide-react";
+import { Home, Gamepad2, Heart, ShoppingCart, Compass, Video } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { useWishlist } from "@/context/WishlistContext";
 import { useCart } from "@/context/CartContext";
@@ -13,16 +13,12 @@ const NAV_ITEMS = [
   { href: "/cart", label: "Cart", icon: ShoppingCart },
 ];
 
-function focusSiteSearch() {
-  window.scrollTo({ top: 0, behavior: "smooth" });
-  window.setTimeout(() => document.getElementById("site-search-input")?.focus(), 300);
-}
-
 export function MobileBottomNav() {
   const pathname = usePathname();
   const { productIds } = useWishlist();
   const { cart } = useCart();
   const homeActive = pathname === "/";
+  const gamesActive = pathname.startsWith("/games") || pathname === "/play";
 
   return (
     <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 flex h-14 border-t border-ink-100 bg-white/95 backdrop-blur md:hidden">
@@ -37,15 +33,20 @@ export function MobileBottomNav() {
         Home
       </Link>
 
-      <button
-        type="button"
-        onClick={focusSiteSearch}
-        aria-label="Search"
-        className="relative flex flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-medium text-ink-400"
+      <Link
+        href="/games"
+        className={cn(
+          "relative flex flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-medium",
+          gamesActive ? "text-primary-600" : "text-ink-400"
+        )}
       >
-        <Search size={20} />
-        Search
-      </button>
+        <Gamepad2 size={20} strokeWidth={gamesActive ? 2.5 : 2} />
+        Games
+        <span
+          aria-hidden="true"
+          className="absolute right-[calc(50%-15px)] top-0.5 flex size-2 rounded-full bg-sun-400"
+        />
+      </Link>
 
       {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
         const active = pathname.startsWith(href);
