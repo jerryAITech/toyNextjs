@@ -219,7 +219,7 @@ export function Game2048({ active }: { active: boolean }) {
 
     if (Math.abs(dx) > Math.abs(dy)) {
       move(dx > 0 ? "RIGHT" : "LEFT");
-    } else {
+    } else if (Math.abs(dy) < 60) {
       move(dy > 0 ? "DOWN" : "UP");
     }
   };
@@ -267,12 +267,12 @@ export function Game2048({ active }: { active: boolean }) {
       </div>
 
       {/* 4x4 Grid Board */}
-      <div
-        onTouchStart={onTouchStart}
-        onTouchEnd={onTouchEnd}
-        className="relative flex-1 flex flex-col items-center justify-center p-3"
-      >
-        <div className="grid grid-cols-4 gap-2.5 w-full max-w-[310px] sm:max-w-[340px] aspect-square rounded-3xl bg-amber-900/15 p-3 shadow-soft border-2 border-amber-800/20">
+      <div className="relative flex-1 flex flex-col items-center justify-center p-3">
+        <div
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+          className="grid grid-cols-4 gap-2.5 w-full max-w-[310px] sm:max-w-[340px] aspect-square rounded-3xl bg-amber-900/15 p-3 shadow-soft border-2 border-amber-800/20 touch-pan-y"
+        >
           {board.map((row, r) =>
             row.map((val, c) => {
               const meta = TILE_TOYS[val];

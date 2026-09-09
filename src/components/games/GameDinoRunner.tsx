@@ -47,6 +47,7 @@ export function GameDinoRunner({ active }: { active: boolean }) {
   const starsRef = useRef<Star[]>([]);
   const lastObstacleSpawnRef = useRef(0);
   const speedRef = useRef(240);
+  const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
 
   const effectivelyPlaying = isPlaying && active;
 
@@ -314,12 +315,36 @@ export function GameDinoRunner({ active }: { active: boolean }) {
       <div
         ref={containerRef}
         onPointerDown={(e) => {
-          e.preventDefault();
-          jump();
+          pointerStartRef.current = { x: e.clientX, y: e.clientY };
         }}
-        className="relative flex-1 touch-none overflow-hidden cursor-pointer"
+        onPointerUp={(e) => {
+          if (!pointerStartRef.current) return;
+          const dx = Math.abs(e.clientX - pointerStartRef.current.x);
+          const dy = Math.abs(e.clientY - pointerStartRef.current.y);
+          pointerStartRef.current = null;
+          if (dx < 14 && dy < 14) {
+            jump();
+          }
+        }}
+        className="relative flex-1 touch-pan-y overflow-hidden cursor-pointer"
       >
         <canvas ref={canvasRef} className="h-full w-full" />
+
+        {/* On-screen Thumb Jump Button for easy mobile playing */}
+        {isPlaying && !gameOver && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center z-20">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                jump();
+              }}
+              className="pointer-events-auto flex items-center gap-2 rounded-full bg-emerald-600/90 px-6 py-2.5 text-sm font-black text-white shadow-lifted backdrop-blur active:scale-95 hover:bg-emerald-700"
+            >
+              🦕 JUMP (DOUBLE TAP FOR 2X)
+            </button>
+          </div>
+        )}
 
         {/* Start Overlay */}
         {!isPlaying && !gameOver && (

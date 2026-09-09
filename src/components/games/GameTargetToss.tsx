@@ -46,6 +46,7 @@ export function GameTargetToss({ active }: { active: boolean }) {
   const animFrameRef = useRef<number | null>(null);
   const lastSpawnRef = useRef(0);
   const comboTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
 
   const effectivelyPlaying = isPlaying && active;
 
@@ -282,10 +283,18 @@ export function GameTargetToss({ active }: { active: boolean }) {
       <div
         ref={containerRef}
         onPointerDown={(e) => {
-          e.preventDefault();
-          handlePointerDown(e.clientX, e.clientY);
+          pointerStartRef.current = { x: e.clientX, y: e.clientY };
         }}
-        className="relative flex-1 touch-none overflow-hidden cursor-crosshair"
+        onPointerUp={(e) => {
+          if (!pointerStartRef.current) return;
+          const dx = Math.abs(e.clientX - pointerStartRef.current.x);
+          const dy = Math.abs(e.clientY - pointerStartRef.current.y);
+          pointerStartRef.current = null;
+          if (dx < 14 && dy < 14) {
+            handlePointerDown(e.clientX, e.clientY);
+          }
+        }}
+        className="relative flex-1 touch-pan-y overflow-hidden cursor-crosshair"
       >
         <canvas ref={canvasRef} className="h-full w-full" />
 

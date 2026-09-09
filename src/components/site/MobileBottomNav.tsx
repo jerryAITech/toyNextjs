@@ -21,7 +21,7 @@ export function MobileBottomNav() {
   const gamesActive = pathname.startsWith("/games") || pathname === "/play";
 
   return (
-    <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 flex h-14 border-t border-ink-100 bg-white/95 backdrop-blur md:hidden">
+    <nav className="safe-bottom fixed inset-x-0 bottom-0 z-50 flex h-14 border-t border-ink-100 bg-white/95 backdrop-blur md:hidden">
       <Link
         href="/"
         className={cn(

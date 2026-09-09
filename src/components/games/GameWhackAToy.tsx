@@ -216,10 +216,7 @@ export function GameWhackAToy({ active }: { active: boolean }) {
               <button
                 key={index}
                 type="button"
-                onPointerDown={(e) => {
-                  e.preventDefault();
-                  handleWhack(index);
-                }}
+                onClick={() => handleWhack(index)}
                 className="relative aspect-square rounded-3xl bg-amber-200/90 border-4 border-amber-400/80 shadow-soft overflow-hidden flex items-center justify-center active:scale-95 transition-transform"
                 aria-label={`Toy box hole ${index + 1}`}
               >

@@ -78,6 +78,8 @@ export function GameBalloonPop({ active }: { active: boolean }) {
     lastSpawnRef.current = performance.now();
   }, []);
 
+  const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
+
   // Handle pop logic
   const handleCanvasClick = (clientX: number, clientY: number) => {
     if (!effectivelyPlaying) return;
@@ -358,13 +360,21 @@ export function GameBalloonPop({ active }: { active: boolean }) {
       {/* Interactive HTML5 Balloon Canvas Area */}
       <div
         ref={containerRef}
-        className="relative flex-1 touch-none overflow-hidden"
+        className="relative flex-1 touch-pan-y overflow-hidden"
       >
         <canvas
           ref={canvasRef}
           onPointerDown={(e) => {
-            e.preventDefault();
-            handleCanvasClick(e.clientX, e.clientY);
+            pointerStartRef.current = { x: e.clientX, y: e.clientY };
+          }}
+          onPointerUp={(e) => {
+            if (!pointerStartRef.current) return;
+            const dx = Math.abs(e.clientX - pointerStartRef.current.x);
+            const dy = Math.abs(e.clientY - pointerStartRef.current.y);
+            pointerStartRef.current = null;
+            if (dx < 14 && dy < 14) {
+              handleCanvasClick(e.clientX, e.clientY);
+            }
           }}
           className="h-full w-full cursor-pointer"
         />

@@ -6,8 +6,6 @@ import {
   ArrowLeft,
   Volume2,
   VolumeX,
-  ChevronUp,
-  ChevronDown,
   Sparkles,
   Gamepad2,
   List,
@@ -219,13 +217,42 @@ export function GamesFeed() {
   const activeGame = GAMES[activeIndex] || GAMES[0];
 
   return (
-    <div
-      ref={containerRef}
-      onScroll={() => {
-        if (!hasScrolled) setHasScrolled(true);
-      }}
-      className="fixed inset-0 z-40 h-dvh w-full overflow-y-scroll bg-ink-950 snap-y-mandatory no-scrollbar"
-    >
+    <div className="fixed inset-0 z-40 h-dvh w-full overflow-hidden bg-ink-950">
+      {/* Snap Scrollable Game Container */}
+      <div
+        ref={containerRef}
+        onScroll={() => {
+          if (!hasScrolled) setHasScrolled(true);
+        }}
+        className="h-full w-full overflow-y-scroll snap-y-mandatory no-scrollbar"
+        style={{
+          WebkitOverflowScrolling: "touch",
+          overscrollBehaviorY: "contain",
+          touchAction: "pan-y",
+        }}
+      >
+        {GAMES.map((game, index) => {
+          const GameComponent = game.component;
+          const isActive = index === activeIndex;
+
+          return (
+            <div
+              key={game.id}
+              ref={(el) => {
+                slideRefs.current[index] = el;
+              }}
+              data-index={index}
+              className="relative flex h-dvh w-full shrink-0 snap-start items-center justify-center bg-ink-950"
+            >
+              {/* Centered responsive frame: 100% on mobile, 40-50% on desktop (matching Explore) */}
+              <div className="relative h-full w-full overflow-hidden lg:mx-auto lg:w-2/5 lg:max-w-2xl pt-14 pb-14">
+                <GameComponent active={isActive} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
       {/* Top Header Bar (Desktop & Mobile centered column matching Explore) */}
       <div className="pointer-events-none fixed inset-x-0 top-0 z-50 mx-auto flex items-center justify-between bg-gradient-to-b from-black/80 via-black/40 to-transparent p-3 lg:w-2/5 lg:max-w-2xl">
         <div className="pointer-events-auto flex items-center gap-2">
@@ -263,29 +290,6 @@ export function GamesFeed() {
             {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
           </button>
         </div>
-      </div>
-
-      {/* Floating Side Chevron Quick-Switchers */}
-      <div className="pointer-events-none fixed right-3 top-1/2 z-40 -translate-y-1/2 flex flex-col items-center gap-2 lg:right-[calc(30%-48px)]">
-        <button
-          type="button"
-          onClick={() => scrollToSlide(activeIndex - 1)}
-          disabled={activeIndex === 0}
-          aria-label="Previous Game"
-          className="pointer-events-auto flex size-10 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur shadow-soft disabled:opacity-20 active:scale-90 transition-all hover:bg-white/30"
-        >
-          <ChevronUp size={22} />
-        </button>
-
-        <button
-          type="button"
-          onClick={() => scrollToSlide(activeIndex + 1)}
-          disabled={activeIndex === GAMES.length - 1}
-          aria-label="Next Game"
-          className="pointer-events-auto flex size-10 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur shadow-soft disabled:opacity-20 active:scale-90 transition-all hover:bg-white/30"
-        >
-          <ChevronDown size={22} />
-        </button>
       </div>
 
       {/* Subtle First-Time Scroll Hint */}
@@ -354,29 +358,7 @@ export function GamesFeed() {
         </div>
       )}
 
-      {/* Snap Scrollable Game Slides */}
-      {GAMES.map((game, index) => {
-        const GameComponent = game.component;
-        const isActive = index === activeIndex;
-
-        return (
-          <div
-            key={game.id}
-            ref={(el) => {
-              slideRefs.current[index] = el;
-            }}
-            data-index={index}
-            className="relative flex h-dvh w-full shrink-0 snap-start items-center justify-center bg-ink-950"
-          >
-            {/* Centered responsive frame: 100% on mobile, 40-50% on desktop (just like Explore) */}
-            <div className="relative h-full w-full overflow-hidden lg:mx-auto lg:w-2/5 lg:max-w-2xl pt-14 pb-14">
-              <GameComponent active={isActive} />
-            </div>
-          </div>
-        );
-      })}
-
-      {/* Bottom Nav docked for seamless app navigation */}
+      {/* Bottom Nav docked cleanly outside the scroll stream */}
       <MobileBottomNav />
     </div>
   );

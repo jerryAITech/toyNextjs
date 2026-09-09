@@ -341,9 +341,44 @@ export function GameBrickBreaker({ active }: { active: boolean }) {
         onTouchMove={(e) => {
           if (e.touches[0]) handlePointerMove(e.touches[0].clientX);
         }}
-        className="relative flex-1 touch-none overflow-hidden cursor-ew-resize"
+        className="relative flex-1 touch-pan-y overflow-hidden cursor-ew-resize"
       >
         <canvas ref={canvasRef} className="h-full w-full" />
+
+        {/* On-screen Thumb Paddle Controls */}
+        {isPlaying && !gameOver && !isWon && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-3 flex items-center justify-between px-6 z-20">
+            <button
+              type="button"
+              onClick={() => {
+                const canvas = canvasRef.current;
+                if (canvas) {
+                  paddleXRef.current = Math.max(0, paddleXRef.current - 40);
+                }
+              }}
+              className="pointer-events-auto flex size-11 items-center justify-center rounded-2xl bg-white/85 text-ink-800 shadow-soft backdrop-blur active:scale-90"
+              aria-label="Move Paddle Left"
+            >
+              ◀
+            </button>
+            <span className="text-[11px] font-bold text-white/70 bg-black/40 px-3 py-1 rounded-full backdrop-blur">
+              Slide or tap arrows
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                const canvas = canvasRef.current;
+                if (canvas) {
+                  paddleXRef.current = Math.min(canvas.width - 80, paddleXRef.current + 40);
+                }
+              }}
+              className="pointer-events-auto flex size-11 items-center justify-center rounded-2xl bg-white/85 text-ink-800 shadow-soft backdrop-blur active:scale-90"
+              aria-label="Move Paddle Right"
+            >
+              ▶
+            </button>
+          </div>
+        )}
 
         {/* Start Overlay */}
         {!isPlaying && !gameOver && !isWon && (

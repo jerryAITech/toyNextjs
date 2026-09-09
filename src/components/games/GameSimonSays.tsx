@@ -180,10 +180,7 @@ export function GameSimonSays({ active }: { active: boolean }) {
               <button
                 key={pad.id}
                 type="button"
-                onPointerDown={(e) => {
-                  e.preventDefault();
-                  handlePadPress(pad.id);
-                }}
+                onClick={() => handlePadPress(pad.id)}
                 disabled={isShowingSequence}
                 aria-label={`Simon Pad ${pad.name}`}
                 className={`relative rounded-3xl flex flex-col items-center justify-center transition-all duration-150 transform-gpu cursor-pointer shadow-soft ${

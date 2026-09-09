@@ -267,7 +267,7 @@ export function GameToyTrain({ active }: { active: boolean }) {
         <div
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
-          className="relative aspect-square w-full max-w-[310px] sm:max-w-[340px] rounded-3xl border-4 border-amber-800/20 bg-emerald-100/90 shadow-soft overflow-hidden p-1.5"
+          className="relative aspect-square w-full max-w-[310px] sm:max-w-[340px] rounded-3xl border-4 border-amber-800/20 bg-emerald-100/90 shadow-soft overflow-hidden p-1.5 touch-pan-y"
           style={{
             display: "grid",
             gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))`,

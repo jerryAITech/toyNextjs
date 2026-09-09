@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Play, RotateCcw, Trophy } from "lucide-react";
+import { cn } from "@/lib/utils/cn";
 import { playPaddleSound, playWinSound, playGameOverSound } from "@/lib/games/soundEffects";
 
 const WINNING_SCORE = 5;
@@ -328,7 +329,10 @@ export function GameAirHockey({ active }: { active: boolean }) {
         onTouchMove={(e) => {
           if (e.touches[0]) handlePointerMove(e.touches[0].clientX, e.touches[0].clientY);
         }}
-        className="relative flex-1 touch-none overflow-hidden cursor-crosshair m-2 rounded-3xl border-4 border-slate-300 shadow-soft"
+        className={cn(
+          "relative flex-1 overflow-hidden cursor-crosshair m-2 rounded-3xl border-4 border-slate-300 shadow-soft",
+          effectivelyPlaying ? "touch-none" : "touch-pan-y"
+        )}
       >
         <canvas ref={canvasRef} className="h-full w-full" />
 
