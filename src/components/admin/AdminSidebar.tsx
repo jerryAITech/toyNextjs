@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { LogoMark } from "@/components/site/Logo";
+import { useAdminSidebar } from "@/context/AdminSidebarContext";
 
 const MENU = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -36,20 +37,27 @@ const MENU = [
   { href: "/admin/profile", label: "Profile", icon: UserCog },
 ];
 
-export function AdminSidebarContent({ onNavigate }: { onNavigate?: () => void }) {
+export function AdminSidebarContent({ onNavigate, collapsed }: { onNavigate?: () => void; collapsed?: boolean }) {
   const pathname = usePathname();
 
   return (
     <div className="flex h-full flex-col bg-ink-900 text-ink-300">
-      <Link href="/admin/dashboard" className="flex items-center gap-2 px-5 py-5">
+      <Link
+        href="/admin/dashboard"
+        className={cn("flex items-center gap-2 py-5", collapsed ? "justify-center px-2" : "px-5")}
+      >
         <LogoMark size={24} />
-        <span className="font-display text-lg font-extrabold text-white">
-          Toy<span className="text-accent-400">Store</span>
-        </span>
-        <span className="rounded-full bg-primary-500 px-2 py-0.5 text-[10px] font-bold uppercase text-white">Admin</span>
+        {!collapsed && (
+          <>
+            <span className="font-display text-lg font-extrabold text-white">
+              Toy<span className="text-accent-400">Store</span>
+            </span>
+            <span className="rounded-full bg-primary-500 px-2 py-0.5 text-[10px] font-bold uppercase text-white">Admin</span>
+          </>
+        )}
       </Link>
 
-      <nav className="flex-1 space-y-1 overflow-y-auto px-3 pb-4">
+      <nav className={cn("flex-1 space-y-1 overflow-y-auto pb-4", collapsed ? "px-2" : "px-3")}>
         {MENU.map((item) => {
           const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
           return (
@@ -57,13 +65,15 @@ export function AdminSidebarContent({ onNavigate }: { onNavigate?: () => void })
               key={item.href}
               href={item.href}
               onClick={onNavigate}
+              title={collapsed ? item.label : undefined}
               className={cn(
-                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+                "flex items-center gap-3 rounded-xl py-2.5 text-sm font-medium transition-colors",
+                collapsed ? "justify-center px-0" : "px-3",
                 active ? "bg-primary-500 text-white" : "hover:bg-ink-800 hover:text-white"
               )}
             >
-              <item.icon size={17} />
-              {item.label}
+              <item.icon size={17} className="shrink-0" />
+              {!collapsed && item.label}
             </Link>
           );
         })}
@@ -73,9 +83,16 @@ export function AdminSidebarContent({ onNavigate }: { onNavigate?: () => void })
 }
 
 export function AdminSidebar() {
+  const { collapsed } = useAdminSidebar();
+
   return (
-    <aside className="hidden w-64 shrink-0 lg:block">
-      <AdminSidebarContent />
+    <aside
+      className={cn(
+        "hidden shrink-0 transition-[width] duration-300 ease-in-out lg:block",
+        collapsed ? "w-16" : "w-64"
+      )}
+    >
+      <AdminSidebarContent collapsed={collapsed} />
     </aside>
   );
 }

@@ -2,14 +2,16 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Menu, LogOut } from "lucide-react";
+import { Menu, LogOut, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { Drawer } from "@/components/ui/Drawer";
 import { AdminSidebarContent } from "./AdminSidebar";
 import { useAuth } from "@/context/AuthContext";
+import { useAdminSidebar } from "@/context/AdminSidebarContext";
 
 export function AdminTopbar() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { user, setUser } = useAuth();
+  const { collapsed, toggle } = useAdminSidebar();
   const router = useRouter();
 
   async function handleLogout() {
@@ -22,6 +24,14 @@ export function AdminTopbar() {
     <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-ink-100 bg-white px-4 py-3 lg:px-6">
       <button onClick={() => setDrawerOpen(true)} className="text-ink-600 lg:hidden" aria-label="Open menu">
         <Menu size={22} />
+      </button>
+
+      <button
+        onClick={toggle}
+        className="hidden text-ink-600 hover:text-ink-900 lg:block"
+        aria-label={collapsed ? "Show sidebar" : "Hide sidebar"}
+      >
+        {collapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
       </button>
 
       <span className="font-display text-base font-bold text-ink-900 lg:hidden">ToyStore Admin</span>

@@ -52,6 +52,12 @@ export default async function OrderDetailPage({
           <CheckCircle2 size={40} className="text-mint-700" />
           <h1 className="font-display text-lg font-bold text-ink-900">Your order has been placed successfully!</h1>
           <p className="text-sm text-ink-500">Estimated delivery: {order.deliveryEstimate || "3-5 business days"}</p>
+          <Link
+            href="/"
+            className="mt-2 inline-flex h-9 items-center justify-center rounded-full bg-mint-600 px-5 text-sm font-semibold text-white shadow-soft transition-colors hover:bg-mint-700"
+          >
+            Go to Home
+          </Link>
         </div>
       )}
 
