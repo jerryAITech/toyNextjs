@@ -61,3 +61,8 @@ export async function clearGuestCookie() {
   const store = await cookies();
   store.delete(GUEST_COOKIE_NAME);
 }
+
+export async function getGuestId(): Promise<string | null> {
+  const store = await cookies();
+  return store.get(GUEST_COOKIE_NAME)?.value ?? null;
+}

@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
-import { resolveCartOwner } from "@/lib/auth/owner";
+import { resolveOwner } from "@/lib/auth/owner";
 import { getCart, addToCart, updateCartItem, removeFromCart } from "@/lib/services/cartService";
 import { ok, handleApiError } from "@/lib/utils/response";
 
@@ -9,7 +9,7 @@ const updateSchema = z.object({ productId: z.string().min(1), quantity: z.coerce
 
 export async function GET() {
   try {
-    const owner = await resolveCartOwner();
+    const owner = await resolveOwner();
     const cart = await getCart(owner);
     return ok(cart);
   } catch (err) {
@@ -19,7 +19,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const owner = await resolveCartOwner();
+    const owner = await resolveOwner();
     const { productId, quantity } = addSchema.parse(await req.json());
     const cart = await addToCart(owner, productId, quantity);
     return ok(cart, 201);
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const owner = await resolveCartOwner();
+    const owner = await resolveOwner();
     const { productId, quantity } = updateSchema.parse(await req.json());
     const cart = await updateCartItem(owner, productId, quantity);
     return ok(cart);
@@ -41,7 +41,7 @@ export async function PATCH(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const owner = await resolveCartOwner();
+    const owner = await resolveOwner();
     const productId = req.nextUrl.searchParams.get("productId");
     if (!productId) return ok(await getCart(owner));
     const cart = await removeFromCart(owner, productId);

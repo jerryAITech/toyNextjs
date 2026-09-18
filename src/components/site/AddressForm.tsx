@@ -38,11 +38,19 @@ export function AddressForm({
   addressId,
   onSaved,
   onCancel,
+  mode = "account",
+  onSubmit,
+  submitLabel = "Save Address",
 }: {
   initial?: Partial<AddressFormValues>;
   addressId?: string;
-  onSaved: () => void;
+  onSaved?: () => void;
   onCancel?: () => void;
+  /** "account" persists to the logged-in user's saved addresses (default). "inline" hands the
+   *  values to `onSubmit` instead — used for one-off guest checkout addresses that aren't saved. */
+  mode?: "account" | "inline";
+  onSubmit?: (values: AddressFormValues) => void;
+  submitLabel?: string;
 }) {
   const [values, setValues] = useState<AddressFormValues>({ ...EMPTY, ...initial });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -56,6 +64,12 @@ export function AddressForm({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErrors({});
+
+    if (mode === "inline") {
+      onSubmit?.(values);
+      return;
+    }
+
     setSaving(true);
     try {
       const res = await fetch(addressId ? `/api/addresses/${addressId}` : "/api/addresses", {
@@ -73,7 +87,7 @@ export function AddressForm({
         throw new Error(json.message || "Could not save address");
       }
       showToast("Address saved", "success");
-      onSaved();
+      onSaved?.();
     } catch (err) {
       showToast(err instanceof Error ? err.message : "Could not save address", "error");
     } finally {
@@ -98,14 +112,16 @@ export function AddressForm({
         <option value="OTHER">Other</option>
       </Select>
 
-      <label className="col-span-full flex items-center gap-2 text-sm font-medium text-ink-700">
-        <input type="checkbox" checked={values.isDefault} onChange={(e) => set("isDefault", e.target.checked)} className="size-4 rounded accent-primary-500" />
-        Set as default address
-      </label>
+      {mode === "account" && (
+        <label className="col-span-full flex items-center gap-2 text-sm font-medium text-ink-700">
+          <input type="checkbox" checked={values.isDefault} onChange={(e) => set("isDefault", e.target.checked)} className="size-4 rounded accent-primary-500" />
+          Set as default address
+        </label>
+      )}
 
       <div className="col-span-full flex gap-2">
         <Button type="submit" variant="primary" loading={saving}>
-          Save Address
+          {submitLabel}
         </Button>
         {onCancel && (
           <Button type="button" variant="ghost" onClick={onCancel}>

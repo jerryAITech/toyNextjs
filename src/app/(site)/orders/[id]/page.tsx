@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { CheckCircle2, AlertTriangle } from "lucide-react";
-import { requireUser } from "@/lib/auth/session";
+import { getSession, getGuestId } from "@/lib/auth/session";
 import { getOrderById } from "@/lib/services/orderService";
 import { OrderStatusBadge } from "@/components/site/OrderStatusBadge";
 import { OrderTimeline } from "@/components/site/OrderTimeline";
@@ -22,11 +22,13 @@ export default async function OrderDetailPage({
 }) {
   const { id } = await params;
   const { success } = await searchParams;
-  const session = await requireUser();
+  const session = await getSession();
+  const guestId = session ? null : await getGuestId();
+  if (!session && !guestId) notFound();
 
   let order;
   try {
-    order = await getOrderById(session.sub, id);
+    order = await getOrderById({ userId: session?.sub ?? null, guestId }, id);
   } catch {
     notFound();
   }

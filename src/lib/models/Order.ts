@@ -47,7 +47,9 @@ const timelineEventSchema = new Schema(
 const orderSchema = new Schema(
   {
     orderNumber: { type: String, required: true, unique: true },
-    userId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    userId: { type: Schema.Types.ObjectId, ref: "User", default: null, index: true },
+    guestId: { type: String, default: null, index: true },
+    guestEmail: { type: String, trim: true, default: null },
     items: { type: [orderItemSchema], required: true },
     addressSnapshot: { type: addressSnapshotSchema, required: true },
 

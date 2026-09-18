@@ -26,6 +26,7 @@ type AdminOrder = {
   orderStatus: string;
   createdAt: string;
   userId?: { name: string; email: string } | null;
+  guestEmail?: string | null;
 };
 
 const PAYMENT_STATUS_TONE: Record<string, "success" | "warning" | "danger" | "neutral"> = {
@@ -119,7 +120,7 @@ export default function AdminOrdersPage() {
                 <TD>
                   <div>
                     <p className="font-medium">{o.userId?.name || "Guest"}</p>
-                    <p className="text-xs text-ink-400">{o.userId?.email}</p>
+                    <p className="text-xs text-ink-400">{o.userId?.email || o.guestEmail}</p>
                   </div>
                 </TD>
                 <TD numeric>{o.items.length}</TD>

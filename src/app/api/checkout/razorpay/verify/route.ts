@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
-import { requireUser } from "@/lib/auth/session";
+import { resolveOwner } from "@/lib/auth/owner";
 import { getOrderById, confirmRazorpayOrderPayment, markOrderPaymentFailed } from "@/lib/services/orderService";
 import { verifyRazorpaySignature } from "@/lib/razorpay/client";
 import { ok, fail, handleApiError, ApiError } from "@/lib/utils/response";
@@ -14,10 +14,10 @@ const schema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await requireUser();
+    const owner = await resolveOwner();
     const body = schema.parse(await req.json());
 
-    const order = await getOrderById(session.sub, body.orderId);
+    const order = await getOrderById(owner, body.orderId);
 
     if (order.paymentStatus === "PAID") {
       return ok({ orderId: order._id, orderNumber: order.orderNumber, alreadyProcessed: true });

@@ -7,7 +7,11 @@ import { PaymentModel } from "@/lib/models/Payment";
 import { getCart, clearCart } from "@/lib/services/cartService";
 import { incrementCouponUsage } from "@/lib/services/couponService";
 import { ApiError } from "@/lib/utils/response";
+import type { Owner } from "@/lib/auth/owner";
+import type { AddressInput } from "@/lib/validation/address";
 import crypto from "crypto";
+
+export type AddressSource = { kind: "saved"; addressId: string } | { kind: "inline"; address: Omit<AddressInput, "isDefault"> };
 
 function generateOrderNumber() {
   const timestamp = Date.now().toString(36).toUpperCase();
@@ -15,10 +19,44 @@ function generateOrderNumber() {
   return `TS${timestamp}${random}`;
 }
 
-async function buildOrderDraft(userId: string, addressId: string) {
+async function resolveAddressSnapshot(owner: Owner, source: AddressSource) {
+  if (source.kind === "saved") {
+    if (!owner.userId) throw new ApiError("Please select a valid delivery address.", 400);
+    const address = await AddressModel.findOne({ _id: source.addressId, userId: owner.userId });
+    if (!address) throw new ApiError("Please select a valid delivery address.", 400);
+    return {
+      fullName: address.fullName,
+      mobile: address.mobile,
+      house: address.house,
+      street: address.street,
+      area: address.area,
+      city: address.city,
+      state: address.state,
+      pincode: address.pincode,
+      landmark: address.landmark,
+      type: address.type,
+    };
+  }
+
+  const a = source.address;
+  return {
+    fullName: a.fullName,
+    mobile: a.mobile,
+    house: a.house,
+    street: a.street,
+    area: a.area || "",
+    city: a.city,
+    state: a.state,
+    pincode: a.pincode,
+    landmark: a.landmark || "",
+    type: a.type,
+  };
+}
+
+async function buildOrderDraft(owner: Owner, source: AddressSource) {
   await connectDB();
 
-  const cartView = await getCart({ userId, guestId: null });
+  const cartView = await getCart(owner);
   if (cartView.items.length === 0) throw new ApiError("Your cart is empty.", 400);
 
   const unavailable = cartView.items.filter((i) => i.unavailable);
@@ -29,8 +67,7 @@ async function buildOrderDraft(userId: string, addressId: string) {
     );
   }
 
-  const address = await AddressModel.findOne({ _id: addressId, userId });
-  if (!address) throw new ApiError("Please select a valid delivery address.", 400);
+  const addressSnapshot = await resolveAddressSnapshot(owner, source);
 
   const products = await ProductModel.find({ _id: { $in: cartView.items.map((i) => i.productId) } }).lean();
   const productMap = new Map(products.map((p) => [p._id.toString(), p]));
@@ -50,19 +87,6 @@ async function buildOrderDraft(userId: string, addressId: string) {
       finalPrice: product.price * line.quantity,
     };
   });
-
-  const addressSnapshot = {
-    fullName: address.fullName,
-    mobile: address.mobile,
-    house: address.house,
-    street: address.street,
-    area: address.area,
-    city: address.city,
-    state: address.state,
-    pincode: address.pincode,
-    landmark: address.landmark,
-    type: address.type,
-  };
 
   return {
     items,
@@ -104,9 +128,9 @@ async function restoreStock(items: { productId: unknown; quantity: number }[]) {
   }
 }
 
-export async function createCodOrder(userId: string, addressId: string) {
+export async function createCodOrder(owner: Owner, source: AddressSource, guestEmail: string | null = null) {
   await connectDB();
-  const draft = await buildOrderDraft(userId, addressId);
+  const draft = await buildOrderDraft(owner, source);
 
   const settings = await SettingsModel.findOne({ key: "singleton" }).lean();
   if (settings && !settings.codEnabled) throw new ApiError("Cash on Delivery is currently unavailable.", 400);
@@ -121,7 +145,9 @@ export async function createCodOrder(userId: string, addressId: string) {
 
   const order = await OrderModel.create({
     orderNumber: generateOrderNumber(),
-    userId,
+    userId: owner.userId,
+    guestId: owner.userId ? null : owner.guestId,
+    guestEmail: owner.userId ? null : guestEmail?.toLowerCase() ?? null,
     ...draft,
     paymentMethod: "COD",
     paymentStatus: "PENDING",
@@ -133,23 +159,25 @@ export async function createCodOrder(userId: string, addressId: string) {
     deliveryEstimate: "3-5 business days",
   });
 
-  await PaymentModel.create({ orderId: order._id, userId, amount: draft.total, method: "COD", status: "PENDING" });
+  await PaymentModel.create({ orderId: order._id, userId: owner.userId, amount: draft.total, method: "COD", status: "PENDING" });
   if (draft.couponCode) await incrementCouponUsage(draft.couponCode);
-  await clearCart({ userId, guestId: null });
+  await clearCart(owner);
 
   return order;
 }
 
-export async function createPendingRazorpayOrder(userId: string, addressId: string) {
+export async function createPendingRazorpayOrder(owner: Owner, source: AddressSource, guestEmail: string | null = null) {
   await connectDB();
-  const draft = await buildOrderDraft(userId, addressId);
+  const draft = await buildOrderDraft(owner, source);
 
   const settings = await SettingsModel.findOne({ key: "singleton" }).lean();
   if (settings && !settings.razorpayEnabled) throw new ApiError("Online payment is currently unavailable.", 400);
 
   const order = await OrderModel.create({
     orderNumber: generateOrderNumber(),
-    userId,
+    userId: owner.userId,
+    guestId: owner.userId ? null : owner.guestId,
+    guestEmail: owner.userId ? null : guestEmail?.toLowerCase() ?? null,
     ...draft,
     paymentMethod: "RAZORPAY",
     paymentStatus: "PENDING",
@@ -163,9 +191,13 @@ export async function createPendingRazorpayOrder(userId: string, addressId: stri
 
 const RETRYABLE_ORDER_STATUSES = ["PENDING", "PAYMENT_FAILED"];
 
-export async function prepareRazorpayRetry(userId: string, orderId: string) {
+function ownerFilter(owner: Owner) {
+  return owner.userId ? { userId: owner.userId } : { guestId: owner.guestId };
+}
+
+export async function prepareRazorpayRetry(owner: Owner, orderId: string) {
   await connectDB();
-  const order = await OrderModel.findOne({ _id: orderId, userId });
+  const order = await OrderModel.findOne({ _id: orderId, ...ownerFilter(owner) });
   if (!order) throw new ApiError("Order not found.", 404);
 
   if (order.paymentMethod !== "RAZORPAY") throw new ApiError("This order was not placed with online payment.", 400);
@@ -236,15 +268,26 @@ export async function confirmRazorpayOrderPayment(order: Order & { _id: string }
   });
 
   if (order.couponCode) await incrementCouponUsage(order.couponCode);
-  await clearCart({ userId: order.userId.toString(), guestId: null });
+  await clearCart({ userId: order.userId?.toString() ?? null, guestId: order.guestId ?? null });
 }
 
-export async function getOrderById(userId: string, orderId: string, isAdmin = false) {
+export async function getOrderById(owner: Owner, orderId: string, isAdmin = false) {
   await connectDB();
-  const filter = isAdmin ? { _id: orderId } : { _id: orderId, userId };
+  const filter = isAdmin ? { _id: orderId } : { _id: orderId, ...ownerFilter(owner) };
   const order = await OrderModel.findOne(filter).lean();
   if (!order) throw new ApiError("Order not found.", 404);
   return order;
+}
+
+// Claims prior guest-checkout orders placed under this email once that person has an
+// account — signup or login, whichever happens first — so their order history isn't
+// stranded behind a guest cookie they may never come back on the same device/browser for.
+export async function attachGuestOrdersToUser(userId: string, email: string) {
+  await connectDB();
+  await OrderModel.updateMany(
+    { userId: null, guestEmail: email.toLowerCase() },
+    { $set: { userId }, $unset: { guestId: "", guestEmail: "" } }
+  );
 }
 
 export async function listUserOrders(userId: string, status?: string) {
@@ -256,13 +299,13 @@ export async function listUserOrders(userId: string, status?: string) {
 
 const CANCELLABLE_BEFORE = ["PENDING", "CONFIRMED", "PROCESSING"];
 
-export async function cancelOrder(userId: string, orderId: string, reason: string, isAdmin = false) {
+export async function cancelOrder(owner: Owner, orderId: string, reason: string, isAdmin = false) {
   await connectDB();
   const settings = await SettingsModel.findOne({ key: "singleton" }).lean();
   const cutoffStatus = settings?.cancellationWindowStatus || "PACKED";
   const cutoffIndex = ORDER_STATUSES.indexOf(cutoffStatus as (typeof ORDER_STATUSES)[number]);
 
-  const filter = isAdmin ? { _id: orderId } : { _id: orderId, userId };
+  const filter = isAdmin ? { _id: orderId } : { _id: orderId, ...ownerFilter(owner) };
   const order = await OrderModel.findOne(filter);
   if (!order) throw new ApiError("Order not found.", 404);
 

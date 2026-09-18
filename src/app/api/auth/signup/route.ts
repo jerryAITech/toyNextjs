@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { signupSchema } from "@/lib/validation/auth";
 import { signup, mergeGuestCartIntoUser } from "@/lib/services/authService";
+import { attachGuestOrdersToUser } from "@/lib/services/orderService";
 import { createSessionCookie, getOrCreateGuestId, clearGuestCookie } from "@/lib/auth/session";
 import { ok, handleApiError } from "@/lib/utils/response";
 import { rateLimit, clientKeyFromRequest } from "@/lib/utils/rateLimit";
@@ -17,6 +18,7 @@ export async function POST(req: NextRequest) {
 
     await createSessionCookie({ sub: user._id.toString(), role: user.role as "USER" | "ADMIN", name: user.name, email: user.email });
     await mergeGuestCartIntoUser(user._id.toString(), guestId);
+    await attachGuestOrdersToUser(user._id.toString(), user.email);
     await clearGuestCookie();
 
     return ok({ id: user._id, name: user.name, email: user.email, role: user.role }, 201);

@@ -11,7 +11,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     await requireAdmin();
     const { id } = await params;
     const { reason } = schema.parse(await req.json().catch(() => ({})));
-    const order = await cancelOrder("", id, reason, true);
+    const order = await cancelOrder({ userId: null, guestId: null }, id, reason, true);
     return ok(order);
   } catch (err) {
     return handleApiError(err);

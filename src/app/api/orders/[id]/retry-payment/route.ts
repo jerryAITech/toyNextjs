@@ -1,4 +1,4 @@
-import { requireUser } from "@/lib/auth/session";
+import { resolveOwner } from "@/lib/auth/owner";
 import { prepareRazorpayRetry, attachRazorpayOrderId } from "@/lib/services/orderService";
 import { getRazorpayClient } from "@/lib/razorpay/client";
 import { ok, handleApiError, ApiError } from "@/lib/utils/response";
@@ -10,10 +10,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const { allowed } = rateLimit(clientKeyFromRequest(req, "checkout"), 10, 60_000);
     if (!allowed) throw new ApiError("Too many attempts. Please try again shortly.", 429);
 
-    const session = await requireUser();
+    const owner = await resolveOwner();
     const { id } = await params;
 
-    const order = await prepareRazorpayRetry(session.sub, id);
+    const order = await prepareRazorpayRetry(owner, id);
 
     let razorpay: ReturnType<typeof getRazorpayClient>;
     try {

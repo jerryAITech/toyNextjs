@@ -1,14 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Plus, ShieldCheck, Wallet, CreditCard } from "lucide-react";
+import { Plus, ShieldCheck, Wallet, CreditCard, Pencil } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { AddressCard, type AddressData } from "@/components/site/AddressCard";
-import { AddressForm } from "@/components/site/AddressForm";
+import { AddressForm, type AddressFormValues } from "@/components/site/AddressForm";
+import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -17,9 +18,11 @@ import { openRazorpayCheckout } from "@/lib/utils/razorpayCheckout";
 import { cn } from "@/lib/utils/cn";
 import { CheckoutStepper } from "@/components/site/CheckoutStepper";
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export default function CheckoutPage() {
   const { cart, loading: cartLoading, refresh: refreshCart } = useCart();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { showToast } = useToast();
   const router = useRouter();
 
@@ -28,6 +31,15 @@ export default function CheckoutPage() {
   const [addAddressOpen, setAddAddressOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"RAZORPAY" | "COD">("RAZORPAY");
   const [placingOrder, setPlacingOrder] = useState(false);
+  // refreshCart() empties the cart right after a successful order, which would otherwise
+  // trip the "redirect to /cart when empty" effect below and race the redirect to the
+  // order confirmation page.
+  const orderPlacedRef = useRef(false);
+
+  // Guest checkout — no account, so the delivery address is entered inline and used once.
+  const [guestEmail, setGuestEmail] = useState("");
+  const [guestAddress, setGuestAddress] = useState<AddressFormValues | null>(null);
+  const [editingGuestAddress, setEditingGuestAddress] = useState(true);
 
   async function loadAddresses() {
     const res = await fetch("/api/addresses");
@@ -41,17 +53,19 @@ export default function CheckoutPage() {
   }
 
   useEffect(() => {
-    loadAddresses();
+    if (authLoading) return;
+    if (user) loadAddresses();
+    else setAddresses([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [authLoading, user]);
 
   useEffect(() => {
-    if (!cartLoading && (!cart || cart.items.length === 0)) {
+    if (!orderPlacedRef.current && !cartLoading && (!cart || cart.items.length === 0)) {
       router.replace("/cart");
     }
   }, [cartLoading, cart, router]);
 
-  if (cartLoading || addresses === null || !cart || cart.items.length === 0) {
+  if (authLoading || cartLoading || addresses === null || !cart || cart.items.length === 0) {
     return (
       <div className="mx-auto max-w-4xl space-y-3 px-4 py-6">
         <Skeleton className="h-32 w-full" />
@@ -61,10 +75,12 @@ export default function CheckoutPage() {
   }
 
   const hasUnavailable = cart.items.some((i) => i.unavailable);
+  const guestEmailValid = EMAIL_RE.test(guestEmail.trim());
+  const canPlaceOrder = user ? !!selectedAddressId : !!guestAddress && guestEmailValid;
 
   async function placeOrder() {
-    if (!selectedAddressId) {
-      showToast("Please select a delivery address", "error");
+    if (!canPlaceOrder) {
+      showToast(user ? "Please select a delivery address" : "Please add your email and delivery address", "error");
       return;
     }
     if (hasUnavailable) {
@@ -72,16 +88,19 @@ export default function CheckoutPage() {
       return;
     }
 
+    const addressPayload = user ? { addressId: selectedAddressId } : { address: guestAddress, guestEmail: guestEmail.trim() };
+
     setPlacingOrder(true);
     try {
       if (paymentMethod === "COD") {
         const res = await fetch("/api/checkout/cod", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ addressId: selectedAddressId }),
+          body: JSON.stringify(addressPayload),
         });
         const json = await res.json();
         if (!json.success) throw new Error(json.message);
+        orderPlacedRef.current = true;
         await refreshCart();
         router.push(`/orders/${json.data.orderId}?success=1`);
         return;
@@ -90,7 +109,7 @@ export default function CheckoutPage() {
       const createRes = await fetch("/api/checkout/razorpay/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ addressId: selectedAddressId }),
+        body: JSON.stringify(addressPayload),
       });
       const createJson = await createRes.json();
       if (!createJson.success) throw new Error(createJson.message);
@@ -103,7 +122,9 @@ export default function CheckoutPage() {
         amount,
         currency,
         keyId,
-        prefill: { name: user?.name, email: user?.email, contact: user?.mobile },
+        prefill: user
+          ? { name: user.name, email: user.email, contact: user.mobile }
+          : { name: guestAddress?.fullName, email: guestEmail.trim(), contact: guestAddress?.mobile },
         onSuccess: async (response) => {
           try {
             const verifyRes = await fetch("/api/checkout/razorpay/verify", {
@@ -113,6 +134,7 @@ export default function CheckoutPage() {
             });
             const verifyJson = await verifyRes.json();
             if (!verifyJson.success) throw new Error(verifyJson.message);
+            orderPlacedRef.current = true;
             await refreshCart();
             router.push(`/orders/${orderId}?success=1`);
           } catch (err) {
@@ -141,29 +163,80 @@ export default function CheckoutPage() {
 
       <CheckoutStepper
         steps={[
-          { label: "Address", done: !!selectedAddressId },
-          { label: "Summary", done: !!selectedAddressId },
-          { label: "Payment", done: !!selectedAddressId && !!paymentMethod },
+          { label: "Address", done: canPlaceOrder },
+          { label: "Summary", done: canPlaceOrder },
+          { label: "Payment", done: canPlaceOrder && !!paymentMethod },
         ]}
       />
 
       <div className="flex flex-col gap-6 lg:flex-row">
         <div className="flex-1 space-y-6">
           <section>
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-500">1. Delivery Address</h2>
-              <button onClick={() => setAddAddressOpen(true)} className="flex items-center gap-1 text-sm font-semibold text-primary-600">
-                <Plus size={15} /> Add New
-              </button>
-            </div>
-            {addresses.length === 0 ? (
-              <p className="rounded-2xl bg-ink-50 p-4 text-sm text-ink-500">No saved addresses. Add one to continue.</p>
+            {user ? (
+              <>
+                <div className="mb-3 flex items-center justify-between">
+                  <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-500">1. Delivery Address</h2>
+                  <button onClick={() => setAddAddressOpen(true)} className="flex items-center gap-1 text-sm font-semibold text-primary-600">
+                    <Plus size={15} /> Add New
+                  </button>
+                </div>
+                {addresses.length === 0 ? (
+                  <p className="rounded-2xl bg-ink-50 p-4 text-sm text-ink-500">No saved addresses. Add one to continue.</p>
+                ) : (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {addresses.map((a) => (
+                      <AddressCard key={a._id} address={a} selected={selectedAddressId === a._id} onSelect={() => setSelectedAddressId(a._id)} />
+                    ))}
+                  </div>
+                )}
+              </>
             ) : (
-              <div className="grid gap-3 sm:grid-cols-2">
-                {addresses.map((a) => (
-                  <AddressCard key={a._id} address={a} selected={selectedAddressId === a._id} onSelect={() => setSelectedAddressId(a._id)} />
-                ))}
-              </div>
+              <>
+                <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-500">1. Contact &amp; Delivery Address</h2>
+                <p className="mb-3 text-xs text-ink-400">
+                  Checking out as a guest. <a href="/login?redirect=/checkout" className="font-semibold text-primary-600">Log in</a> to use a saved address and track this order later.
+                </p>
+                <div className="space-y-3">
+                  <Input
+                    label="Email"
+                    type="email"
+                    required
+                    value={guestEmail}
+                    onChange={(e) => setGuestEmail(e.target.value)}
+                    error={guestEmail && !guestEmailValid ? "Enter a valid email address" : undefined}
+                  />
+                  {editingGuestAddress ? (
+                    <AddressForm
+                      mode="inline"
+                      initial={guestAddress ?? undefined}
+                      submitLabel="Use this Address"
+                      onSubmit={(values) => {
+                        setGuestAddress(values);
+                        setEditingGuestAddress(false);
+                      }}
+                    />
+                  ) : (
+                    guestAddress && (
+                      <div className="flex items-start justify-between gap-3 rounded-2xl border-2 border-primary-500 bg-white p-4 shadow-soft">
+                        <div className="text-sm">
+                          <p className="font-semibold text-ink-800">{guestAddress.fullName}</p>
+                          <p className="text-ink-500">
+                            {guestAddress.house}, {guestAddress.street}
+                            {guestAddress.area ? `, ${guestAddress.area}` : ""}, {guestAddress.city}, {guestAddress.state} - {guestAddress.pincode}
+                          </p>
+                          <p className="text-ink-500">Mobile: {guestAddress.mobile}</p>
+                        </div>
+                        <button
+                          onClick={() => setEditingGuestAddress(true)}
+                          className="flex shrink-0 items-center gap-1 text-sm font-semibold text-primary-600"
+                        >
+                          <Pencil size={14} /> Change
+                        </button>
+                      </div>
+                    )
+                  )}
+                </div>
+              </>
             )}
           </section>
 
@@ -218,7 +291,7 @@ export default function CheckoutPage() {
                 <Row label="Total" value={formatINR(cart.total)} bold />
               </div>
             </div>
-            <Button variant="primary" fullWidth size="lg" className="mt-4" loading={placingOrder} onClick={placeOrder}>
+            <Button variant="primary" fullWidth size="lg" className="mt-4" loading={placingOrder} disabled={!canPlaceOrder} onClick={placeOrder}>
               Place Order
             </Button>
             <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-ink-400">

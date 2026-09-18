@@ -6,7 +6,6 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Trash2, Tag, X, Sparkles } from "lucide-react";
 import { useCart } from "@/context/CartContext";
-import { useAuth } from "@/context/AuthContext";
 import { QuantityStepper } from "@/components/ui/QuantityStepper";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -25,7 +24,6 @@ type ApplicableCoupon = {
 
 export default function CartPage() {
   const { cart, loading, updateItem, removeItem, applyCoupon, removeCoupon } = useCart();
-  const { user } = useAuth();
   const [couponCode, setCouponCode] = useState("");
   const [applying, setApplying] = useState(false);
   const [applicableCoupons, setApplicableCoupons] = useState<ApplicableCoupon[]>([]);
@@ -68,10 +66,6 @@ export default function CartPage() {
   }
 
   function handleCheckout() {
-    if (!user) {
-      router.push("/login?redirect=/checkout");
-      return;
-    }
     router.push("/checkout");
   }
 

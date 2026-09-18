@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Poppins, Baloo_2 } from "next/font/google";
 import { Providers } from "@/context/Providers";
+import { ServiceWorkerRegistration } from "@/components/site/ServiceWorkerRegistration";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -32,6 +33,11 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
   },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "ToyStore",
+  },
 };
 
 export const viewport: Viewport = {
@@ -44,6 +50,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${poppins.variable} ${baloo.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-background text-foreground">
+        <ServiceWorkerRegistration />
         <Providers>{children}</Providers>
       </body>
     </html>

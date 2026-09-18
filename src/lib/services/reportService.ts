@@ -32,8 +32,8 @@ export async function orderReport({ start, end }: Range) {
   return orders.map((o) => ({
     orderNumber: o.orderNumber,
     date: o.createdAt.toISOString().slice(0, 10),
-    customer: (o.userId as { name?: string } | null)?.name || "Guest",
-    email: (o.userId as { email?: string } | null)?.email || "",
+    customer: (o.userId as { name?: string } | null)?.name || `${o.addressSnapshot.fullName} (Guest)`,
+    email: (o.userId as { email?: string } | null)?.email || o.guestEmail || "",
     total: o.total,
     status: o.orderStatus,
     paymentMethod: o.paymentMethod,
